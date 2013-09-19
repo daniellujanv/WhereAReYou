@@ -1,4 +1,4 @@
 WhereAReYou
 ===========
 
-Offline Friend Locator
+Offline Friend Locator using Bluetooth and WiFi-Direct.
