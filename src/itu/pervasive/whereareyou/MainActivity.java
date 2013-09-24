@@ -17,7 +17,6 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.metaio.sdk.MetaioDebug;
 import com.metaio.tools.io.AssetsManager;
 
 public class MainActivity extends Activity {
@@ -35,14 +34,23 @@ public class MainActivity extends Activity {
 		// extract all the assets
 		try {
 			AssetsManager.extractAllAssets(this, true);
+			loadFriends();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-//		mTask = new AssetsExtracter();
-//		mTask.execute(0);
-		loadFriends();
 	}
+	
+	/**
+	 * 
+	 * onClick button FindAll!
+	 * @param v
+	 */
+	public void btnFindAll_OnClick(View v){
+		//start metaio intent
+		startMetaioIntent();
+	}
+	
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -51,12 +59,6 @@ public class MainActivity extends Activity {
 		return true;
 	}
 
-	private HashMap<String,String> newName(String key, String name){
-		HashMap<String, String> test = new HashMap<String, String>();
-		test.put(key, name);
-		return test;
-	}
-	
 	/*
 	 * 
 	 * loadFriends fills the initial list with the available friends
@@ -75,20 +77,34 @@ public class MainActivity extends Activity {
 		listview.setAdapter(simpleAdpt);
 		listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
-			public void onItemClick(AdapterView<?> parent, final View view,
-					int position, long id) {
-
-				TextView clickedView = (TextView) view;
-
-				Toast.makeText(MainActivity.this, "Item with id ["+id+"] - Position ["+position+"] - Planet ["+clickedView.getText()+"]", Toast.LENGTH_SHORT).show();
-				final Class<?> activity;
+			public void onItemClick(AdapterView<?> parent, final View view, int position, long id) {
+//				TextView clickedView = (TextView) view;
+//				Toast.makeText(MainActivity.this, "Item with id ["+id+"] - Position ["+position+"] - Planet ["+clickedView.getText()+"]", Toast.LENGTH_SHORT).show();
 				//					activity = Class.forName(getPackageName()+".ARActivity");
 				//					Intent i  = new Intent(getApplicationContext(), activity);
-				Intent i  = new Intent(getApplicationContext(), ARActivity.class);
-				i.addCategory(Intent.CATEGORY_BROWSABLE);
-				startActivity(i);
-
+				startMetaioIntent();
 			}
 		});
+	}
+
+	/**
+	 * Create HashMap with key and string
+	 * @param key
+	 * @param name
+	 * @return HashMap
+	 */
+	private HashMap<String,String> newName(String key, String name){
+		HashMap<String, String> test = new HashMap<String, String>();
+		test.put(key, name);
+		return test;
+	}
+	
+	/*
+	 * 
+	 */
+	private void startMetaioIntent(){
+		Intent i  = new Intent(getApplicationContext(), ARActivity.class);
+		i.addCategory(Intent.CATEGORY_BROWSABLE);
+		startActivity(i);
 	}
 }

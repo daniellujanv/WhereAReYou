@@ -37,6 +37,7 @@
         </activity>
         <activity
             android:name="itu.pervasive.whereareyou.ARActivity"
+            android:configChanges="fontScale|keyboard|keyboardHidden|locale|mnc|mcc|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode|touchscreen"
             android:label="@string/title_activity_ar" >
         </activity>
     </application>

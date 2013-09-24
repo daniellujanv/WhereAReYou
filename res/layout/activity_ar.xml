@@ -4,12 +4,25 @@
     android:layout_height="match_parent" >
 
     <ImageButton
-        android:id="@+id/button1"
+        android:id="@+id/btnFindAll"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="right"
         android:background="@android:color/transparent"
         android:onClick="onButtonClick"
-        android:src="@drawable/cancel" />
+        android:src="@drawable/cancel" 
+        android:contentDescription="@string/ARImage"
+        />
+	
+    <TextView
+        android:id="@+id/sensorInfo"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_gravity="bottom"
+        android:shadowColor="#FFFFFF"
+        android:text="@string/Sensors"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+         />
 
 </FrameLayout>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <results>
-<trackingdata channel="0" poiprefix="extpoi-124906-" url="GPS" />
+<trackingdata channel="0" poiprefix="extpoi-124906-" url="ORIENTATION" />
 	<apilevel>7</apilevel>
 	<arel>arelTutorial5.html</arel>
 	<object id="extpoi-0-1" channel="0">
@@ -15,7 +15,7 @@
 					<x>0.0</x><y>0.0</y><z>0.0</z>
 				</rotation>
 				<scale>
-					<x>30.0</x><y>30.0</y><z>30.0</z>
+					<x>0.0</x><y>0.0</y><z>0.0</z>
 				</scale>
 			</transform>
 			<properties>
