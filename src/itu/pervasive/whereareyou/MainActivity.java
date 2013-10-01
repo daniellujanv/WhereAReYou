@@ -20,11 +20,6 @@ import android.widget.Toast;
 import com.metaio.tools.io.AssetsManager;
 
 public class MainActivity extends Activity {
-
-	/**
-	 * Task that will extract all the assets
-	 */
-//	AssetsExtracter mTask;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +30,8 @@ public class MainActivity extends Activity {
 		try {
 			AssetsManager.extractAllAssets(this, true);
 			loadFriends();
+//			startMetaioIntent();
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -69,8 +66,8 @@ public class MainActivity extends Activity {
 		final ListView listview = (ListView) findViewById(R.id.listView1);
 		List<Map<String,String>> list_names = new ArrayList<Map<String,String>>();
 
-		list_names.add(newName("friend","Friend 1"));
-		list_names.add(newName("friend","Friend 2"));
+		list_names.add(newName("friend","David"));
+		list_names.add(newName("friend","Find All!"));
 
 		SimpleAdapter simpleAdpt = new SimpleAdapter(this, list_names, android.R.layout.simple_list_item_1
 				, new String[] {"friend"}, new int[] {android.R.id.text1});
