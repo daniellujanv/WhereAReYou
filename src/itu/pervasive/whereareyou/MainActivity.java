@@ -1,5 +1,5 @@
 package itu.pervasive.whereareyou;
-
+//prototype v2.0
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
