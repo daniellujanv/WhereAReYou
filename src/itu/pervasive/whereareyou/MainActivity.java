@@ -18,7 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.metaio.tools.io.AssetsManager;
-
+//prototype
 public class MainActivity extends Activity {
 	
 	@Override
