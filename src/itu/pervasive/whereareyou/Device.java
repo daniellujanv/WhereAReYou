@@ -2,7 +2,7 @@ package itu.pervasive.whereareyou;
 
 public class Device {
 
-	public boolean found;
+	public boolean found = true;
 	public double distance;
 	public String s_orientation;
 	/* x =  1 -> east
@@ -11,6 +11,7 @@ public class Device {
 	 * y = -1 -> south
 	 */
 	public int[] orientation;
+	public boolean accurate;
 	public String name;
 	public String mac_address;
 	
@@ -37,5 +38,9 @@ public class Device {
 	
 	public void setIOrientation(int[] orientation){
 		this.orientation = orientation;
+	}
+	
+	public void setAccuracy(boolean accurate){
+		this.accurate = accurate;
 	}
 }

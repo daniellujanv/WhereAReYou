@@ -6,7 +6,7 @@ import java.util.List;
 import android.app.Activity;
 import android.util.Log;
 
-public class BtPositioningAll extends Activity{
+public class BtPositioning extends Activity{
 
 	public List<Double> readings; //raw readings
 	public List<Double> meanReadings; // readings after mean filter
@@ -17,15 +17,21 @@ public class BtPositioningAll extends Activity{
 	public double avg_distance = 0;
 	public String calculated_orientation = "Not Calculated";
 	public int orientation[]; //for displaying with ARActivity x = east|west y = north|south
-	
-	public BtPositioningAll(){
+	public boolean accurate = true;
+
+	public BtPositioning(){
 		readings = new ArrayList<Double>();
 		meanReadings = new ArrayList<Double>();
 		distances = new ArrayList<Double>();
 		avg_distances = new ArrayList<Double>();
 		orientation = new int[]{0,0};
+		
+
+		orientation[0] = 0;
+		orientation[1] = -1;
+		avg_distance = 10.0;
 	}
-	
+
 	public double getDistance(double rssi_reading){
 		double dBmi = rssi_reading;
 		double dBm0 = 40;
@@ -52,23 +58,23 @@ public class BtPositioningAll extends Activity{
 			n = 2.0;
 			d0 = 1;
 			dBm0 = 55;
-//			Log.w("n","< 77");
+			//			Log.w("n","< 77");
 		}else 
-		/*	
+			/*	
 			if(Math.abs(dBmi) < 74){ //4 - 10 mts
 			n = 3.0;
 			d0 = 4;
 			dBm0 = -65;
 			Log.w("n","< 74");
 		}else 
-		*/
+			 */
 		{
 			n = 4.0;
 			d0 = 13;
 			dBm0 = 76;
-//			Log.w("n","> 77");
+			//			Log.w("n","> 77");
 		}
-		
+
 		N = (Math.abs(dBmi) - dBm0);
 		N = N / (10*n);
 		distance = Math.pow(A, N)*d0;
@@ -77,26 +83,24 @@ public class BtPositioningAll extends Activity{
 
 	public double addReading(double reading){
 		readings.add(reading);
-        return getDistance(reading); 
+		return getDistance(reading); 
 	}
-	
+
 	public void calculateDistances(){
 		meanFilter();//first the mean filter is applied and the distances are calculated over that
- 		meanFilter();//double filter
-		double average = 0.0;
- 		double avg_6 = 0.0;
+		meanFilter();//double filter
+		double avg_6 = 0.0;
 		for(int i=0; i< meanReadings.size();i++){
 			distances.add(getDistance(meanReadings.get(i)));
- 			average += distances.get(i);
- 			avg_6 += distances.get(i);
- 			if(i%6 == 0 && i > 0){
- 				avg_distances.add(avg_6/6);
- 				avg_6 = 0;
- 			}
+			if(i%6 == 0 && i > 0){
+				avg_distances.add(avg_6/6);
+				avg_6 = 0;
+			}else{
+				avg_6 += distances.get(i);
+			}
 		}
-		avg_distance = average/meanReadings.size();
 	}
-	
+
 	public void calculateOrientation(){
 		/*
 		 * readings always start heading north
@@ -126,10 +130,11 @@ public class BtPositioningAll extends Activity{
 		 */
 		String[] orientations = new String[]{"North","North-East","East",
 				"South-East","South","South-West","West","North-West"};
-//		String h_orientation;//string for heighest orientation
-//		String l_orientation; //string for lowest orientation
+		//		String h_orientation;//string for heighest orientation
+		//		String l_orientation; //string for lowest orientation
 		int h_reading = 0; //index for heighest reading
 		int l_reading = 0; // index for lowest reading
+		accurate = true;
 		for(int i=0;i < distances.size() ; i++){
 			for(int j = i+1; j < distances.size()-1; j++){
 				if(distances.get(h_reading) < distances.get(j) ){
@@ -142,81 +147,103 @@ public class BtPositioningAll extends Activity{
 		}
 		int index_h = (int) Math.floor(h_reading/6);
 		int index_l = (int) Math.floor(l_reading/6);
-		int definitive = 1;
-		calculated_orientation = "Heigh: " + orientations[index_h] 
-				+ " \n Low: " + orientations[index_l];
+		calculated_orientation = orientations[index_l];
 		//calculate index for orientation if index_l = 4 (south) 
 		//we need to know if index_h points to North
-		if( add(index_h, 4) == index_l || add(index_h, 3) == index_l || add(index_h, 5) == index_l){
-			calculated_orientation += "\n ****** Orientation: "+ orientations[index_l]+ "**********";			
+		if( add(index_h, 4, orientations.length) == index_l || add(index_h, 3, orientations.length) == index_l || add(index_h, 5, orientations.length) == index_l){
+			accurate = true;
 		}else{
-			calculated_orientation += "\n *Not Definitive*";
-			definitive = -1;
+			accurate = false;
 		}
+		
+		//calculate average distance with the 4 lowest
+		double average = 0.0;
+		average += distances.get(index_l); //length 60???????
+		average += distances.get(add(index_l,-1, distances.size()));
+		average += distances.get(add(index_l,+1, distances.size()));
+		average += distances.get(add(index_l,+2, distances.size()));
+		average = average/4;
+		avg_distance = average;
+
 		/* x =  1 -> east
 		 * x = -1 -> west
 		 * y =  1 -> north
 		 * y = -1 -> south
+		 * 0 <= index_l <= 7
 		 */
-		switch(index_l*definitive){
+		switch(index_l){
 		case 0:
 			orientation[0] = 0;
 			orientation[1] = 1;
 			;
-		break;
+			break;
 		case 1:
 			orientation[0] = 1;
 			orientation[1] = 1;
-		 ;
-		break;
+			;
+			break;
 		case 2: 
 			orientation[0] = 1;
 			orientation[1] = 0;
 			;
-		break;
+			break;
 		case 3: 
 			orientation[0] = 1;
 			orientation[1] = -1;
 			;
-		break;
+			break;
 		case 4: 
 			orientation[0] = 0;
 			orientation[1] = -1;
 			;
-		break;
+			break;
 		case 5:
 			orientation[0] = -1;
 			orientation[1] = -1;
 			;
-		break;
+			break;
 		case 6: 
 			orientation[0] = -1;
 			orientation[1] = 0;
 			;
-		break;
+			break;
 		case 7: 
 			orientation[0] = -1;
 			orientation[1] = 1;
 			;
-		break;
+			break;
 		default: 
 			orientation[0] = 0;
 			orientation[1] = 0;
 			;
-		break;
+			break;
 		}
 	}
 
-	private int add(int index, int toAdd){
-		return ((index + toAdd > 7)? (index + toAdd - 1 - 7) : index + toAdd);
+	private int add(int index, int toAdd, int listSize){
+		if(index + toAdd > listSize){
+			return (index + toAdd - 1 - listSize);
+		}else if(index + toAdd < 0){
+			return (toAdd + index + listSize);
+		}else{
+			return index + toAdd;
+		}
 	}
-	
- 	public int[] getOrientation(){
+
+	public int[] getOrientation(){
 		return orientation;
 	}
- 	
+
+	public String getSOrientation(){
+		return this.calculated_orientation;
+	}
+	
+	public boolean getAccuracy(){
+		return accurate;
+	}
+	
 	private void meanFilter(){
- 		//how many digits around the one being processed are taken into account
+		//how many digits around the one being processed are taken into account
 		double[] digitsAround = new double[weights.length];
 		//digits to "include" if processing the initial/final part of list
 		int offset = (weights.length / 3);
@@ -229,7 +256,7 @@ public class BtPositioningAll extends Activity{
 		for(int i = 0; i < readings.size(); i++){
 			for(int j = 0; j <  weights.length; j++){
 				if((i+j) - offset < 0 || (i+j) - offset >= readings.size()){
-					digitsAround[j] = (double)readings.get(i);
+					digitsAround[j] = (double)readings.get(i); // adding numbers around the list to complete mean filter
 				}
 				else{
 					digitsAround[j] = (double)readings.get((i+j)-offset);
@@ -247,26 +274,26 @@ public class BtPositioningAll extends Activity{
 		readings = new ArrayList<Double>(meanReadings);
 	}
 
- 	public String getCalculatedDistances(){
- 		String response = "****\n AVG Distances \n";
- 		for(int i = 0; i < avg_distances.size(); i++){
- 			response += i+ " - "+ String.format("%.3f",avg_distances.get(i)) + " \n ";
- 		}
- 		response += "Average " + String.format("%.3f", avg_distance) + "\n Orientation - \n"+ calculated_orientation;
- 		Log.w("ALL", response);
- 		return response;
- 	}
+	public String getCalculatedDistances(){
+		String response = "****\n AVG Distances \n";
+		for(int i = 0; i < avg_distances.size(); i++){
+			response += i+ " - "+ String.format("%.3f",avg_distances.get(i)) + " \n ";
+		}
+		response += "Average " + String.format("%.3f", avg_distance) + "\n Orientation - \n"+ calculated_orientation;
+		Log.w("ALL", response);
+		return response;
+	}
 
- 	public double getCalculatedDistance(){
- 		return avg_distance;
- 	}
+	public double getCalculatedDistance(){
+		return avg_distance;
+	}
 
- 	public void printList(List<Double> list, String it){
- 		String toPrint = it;
- 		for(int i=0;i<list.size();i++){
- 			toPrint += ","+list.get(i).toString();
- 		}
- 		toPrint+="\n";
- 		Log.w("mean",toPrint);
- 	}
+	public void printList(List<Double> list, String it){
+		String toPrint = it;
+		for(int i=0;i<list.size();i++){
+			toPrint += ","+list.get(i).toString();
+		}
+		toPrint+="\n";
+		Log.w("mean",toPrint);
+	}
 }

@@ -7,26 +7,15 @@
 
     <TextView
         android:id="@+id/textView1"
-        android:layout_width="wrap_content"
-        android:layout_height="50dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:layout_toLeftOf="@+id/btnFindAll"
-        android:background="#cdcdcd"
+        android:background="#6677ee"
         android:text="@string/TitleMain"
+        android:textColor="#fff"
         android:textSize="22sp" />
 
-    <Button
-        android:id="@+id/btnFindAll"
-        android:layout_width="100dp"
-        android:layout_height="50dp"
-        android:layout_above="@+id/listView1"
-        android:layout_alignParentTop="true"
-        android:layout_alignRight="@+id/listView1"
-        android:text="@string/AllFriendsBtn"
-        android:textSize="16sp" 
-        android:onClick="btnFindAll_OnClick"
-        />
     
     <ListView
         android:id="@+id/listView1"

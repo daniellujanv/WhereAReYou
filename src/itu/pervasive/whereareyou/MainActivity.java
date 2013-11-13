@@ -35,7 +35,7 @@ public class MainActivity extends Activity {
 	private BluetoothAdapter mBluetoothAdapter;
 	private int REQUEST_ENABLE_BT = 1;
 	private List<Map<String,String>> names_present_devices;
-	private List<Map<String,String>> devices;
+//	private List<Map<String,String>> devices;
 	private List<Map<String,String>> paired_devices;
 	private List<Map<String,String>> present_devices;
 	private String[] device_to_search;
@@ -43,14 +43,14 @@ public class MainActivity extends Activity {
 	private SimpleAdapter simpleAdpt;
 
 
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		// extract all the assets
 		try {
-			devices = new ArrayList<Map<String,String>>();
+//			devices = new ArrayList<Map<String,String>>();
 			paired_devices = new ArrayList<Map<String,String>>();
 			lv_devices = (ListView) findViewById(R.id.listView1);
 			//metaio assets
@@ -79,7 +79,9 @@ public class MainActivity extends Activity {
 	 */
 	public void btnFindAll_OnClick(View v){
 		//start metaio intent
-		startMetaioIntent(true);
+		device_to_search[0] = "Pervasive_758";
+		device_to_search[1] = "08:37:3D:C7:2B:FD";
+		startMetaioIntent();
 	}
 
 	@Override
@@ -101,7 +103,7 @@ public class MainActivity extends Activity {
 			return super.onOptionsItemSelected(item);
 		}
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see android.app.Activity#onDestroy()
@@ -119,8 +121,8 @@ public class MainActivity extends Activity {
 			Log.w("onDestroy", e.toString());
 		}
 	}
-	
-	
+
+
 	/*
 	 * 
 	 * loadFriends fills the initial list with the available friends
@@ -143,14 +145,14 @@ public class MainActivity extends Activity {
 					//08:37:3D:C7:2B:FD
 					String mac_address = device.get(device_name);
 					if(mac_address != null){
-						Toast.makeText(MainActivity.this, "Item with id ["+mac_address+"]", Toast.LENGTH_SHORT).show();
+						Toast.makeText(MainActivity.this, "Look for the red cross in \n the radar and click it!", Toast.LENGTH_LONG).show();
 						device_to_search = new String[]{ device_name,mac_address };
 					}
 				}
-				
+
 				//activity = Class.forName(getPackageName()+".ARActivity");
 				//Intent i  = new Intent(getApplicationContext(), activity);
-				startMetaioIntent(false);
+				startMetaioIntent();
 			}
 		});
 		getPairedDevices();
@@ -171,17 +173,14 @@ public class MainActivity extends Activity {
 	/*
 	 * 
 	 */
-	private void startMetaioIntent(boolean allDevices){
+	private void startMetaioIntent(){
 		try{
-		unregisterReceiver(getPresentPairedDevices);
-		mBluetoothAdapter.cancelDiscovery();
+			unregisterReceiver(getPresentPairedDevices);
+			mBluetoothAdapter.cancelDiscovery();
 		}catch(Exception e){}
 		Intent intent  = new Intent(getApplicationContext(), ARActivity.class);
 		intent.addCategory(Intent.CATEGORY_BROWSABLE);
-		if(!allDevices){
-			intent.putExtra("device", device_to_search);
-		}
-		intent.putExtra("allDevices", allDevices);
+		intent.putExtra("device", device_to_search);
 		startActivity(intent);
 	}
 
@@ -206,19 +205,19 @@ public class MainActivity extends Activity {
 		// Create the AlertDialog
 		AlertDialog dialog = builder.create();
 	}
-	
+
 	private void getPairedDevices(){
 		Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
 		// If there are paired devices
 		if (pairedDevices.size() > 0) {
-		    // Loop through paired devices
-		    for (BluetoothDevice device : pairedDevices) {
-		        // Add the name and address to an array
-				Log.w("paired","device - "+device.getName());
-		    	paired_devices.add(newName(device.getName(),device.getAddress()));
-//				names_devices.add(newName("device",device.getName()));
-//				devices.add(newName(device.getName(),device.getAddress()));
-		    }
+			// Loop through paired devices
+			for (BluetoothDevice device : pairedDevices) {
+				// Add the name and address to an array
+//				Log.w("paired","device - "+device.getName());
+				paired_devices.add(newName(device.getName(),device.getAddress()));
+				//				names_devices.add(newName("device",device.getName()));
+				//				devices.add(newName(device.getName(),device.getAddress()));
+			}
 		}
 		//get present devices from paired devices
 		mBluetoothAdapter.startDiscovery();
@@ -261,7 +260,7 @@ public class MainActivity extends Activity {
 				// Register the BroadcastReceiver
 				loadFriends();
 			}else {
-//				toast("result NOT_OK - request_enable_bt \n");
+				//				toast("result NOT_OK - request_enable_bt \n");
 				Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 				startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
 			}
