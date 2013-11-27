@@ -18,7 +18,6 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <!-- These permissions are only needed for debugging -->
-    <uses-permission android:name="android.permission.SET_DEBUG_APP" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     
     <application

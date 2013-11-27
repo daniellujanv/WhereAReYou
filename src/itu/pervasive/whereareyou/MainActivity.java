@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import android.app.Activity;
@@ -25,6 +24,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,11 +41,12 @@ public class MainActivity extends Activity {
 	private String[] device_to_search;
 	private ListView lv_devices;
 	private SimpleAdapter simpleAdpt;
+	private boolean indoor = true;
 
 
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+ 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		// extract all the assets
@@ -181,6 +182,7 @@ public class MainActivity extends Activity {
 		Intent intent  = new Intent(getApplicationContext(), ARActivity.class);
 		intent.addCategory(Intent.CATEGORY_BROWSABLE);
 		intent.putExtra("device", device_to_search);
+		intent.putExtra("indoor", indoor);
 		startActivity(intent);
 	}
 
@@ -265,5 +267,19 @@ public class MainActivity extends Activity {
 				startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
 			}
 		}
+	}
+	
+	/*
+	 * onToggleButton click
+	 * set environment for the app
+	 */
+	public void onToggleClicked(View view) {
+	    // Is the toggle on?
+	    boolean on = ((Switch) view).isChecked();
+	    if (on) {
+	    	indoor = false;
+	    } else {
+	    	indoor = true;
+	    }
 	}
 }

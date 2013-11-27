@@ -18,18 +18,20 @@ public class BtPositioning extends Activity{
 	public String calculated_orientation = "Not Calculated";
 	public int orientation[]; //for displaying with ARActivity x = east|west y = north|south
 	public boolean accurate = true;
+	private boolean indoor = true;
+	private int readingsPerOrientation = 4;
 
-	public BtPositioning(){
+	public BtPositioning(boolean indoor){
 		readings = new ArrayList<Double>();
 		meanReadings = new ArrayList<Double>();
 		distances = new ArrayList<Double>();
 		avg_distances = new ArrayList<Double>();
 		orientation = new int[]{0,0};
-		
+		this.indoor = indoor;
 
 		orientation[0] = 0;
 		orientation[1] = -1;
-		avg_distance = 10.0;
+		avg_distance = 0.0;
 	}
 
 	public double getDistance(double rssi_reading){
@@ -53,26 +55,26 @@ public class BtPositioning extends Activity{
 		 *        		10*n
 		 * 
 		 *  (A^N)*d0 = d
-		 */
-		if(Math.abs(dBmi) <= 77){ // 0-3 mts
-			n = 2.0;
-			d0 = 1;
-			dBm0 = 55;
-			//			Log.w("n","< 77");
-		}else 
-			/*	
+		 *  
+		 *  
 			if(Math.abs(dBmi) < 74){ //4 - 10 mts
 			n = 3.0;
 			d0 = 4;
 			dBm0 = -65;
 			Log.w("n","< 74");
-		}else 
-			 */
-		{
-			n = 4.0;
-			d0 = 13;
-			dBm0 = 76;
-			//			Log.w("n","> 77");
+			} 
+		 */
+		if(!indoor){
+			n = 2.0;
+			d0 = 1;
+			dBm0 = 55;
+		}else { 
+//			if(Math.abs(dBmi) <= 77){ // 0-13 mts
+				n = 2.3;
+				d0 = 1;
+				dBm0 = 55;
+				//			Log.w("n","< 77");
+//			}
 		}
 
 		N = (Math.abs(dBmi) - dBm0);
@@ -89,14 +91,15 @@ public class BtPositioning extends Activity{
 	public void calculateDistances(){
 		meanFilter();//first the mean filter is applied and the distances are calculated over that
 		meanFilter();//double filter
-		double avg_6 = 0.0;
+		double avg_4 = 0.0;
 		for(int i=0; i< meanReadings.size();i++){
 			distances.add(getDistance(meanReadings.get(i)));
-			if(i%6 == 0 && i > 0){
-				avg_distances.add(avg_6/6);
-				avg_6 = 0;
+			if(i%readingsPerOrientation == 0 && i > 0){
+				avg_distances.add(avg_4/readingsPerOrientation);
+				avg_4 = 0;
+				avg_4 += distances.get(i);
 			}else{
-				avg_6 += distances.get(i);
+				avg_4 += distances.get(i);
 			}
 		}
 	}
@@ -132,39 +135,37 @@ public class BtPositioning extends Activity{
 				"South-East","South","South-West","West","North-West"};
 		//		String h_orientation;//string for heighest orientation
 		//		String l_orientation; //string for lowest orientation
-		int h_reading = 0; //index for heighest reading
-		int l_reading = 0; // index for lowest reading
+		int index_h = 0; //index for heighest reading
+		int index_l = 0; // index for lowest reading
 		accurate = true;
-		for(int i=0;i < distances.size() ; i++){
-			for(int j = i+1; j < distances.size()-1; j++){
-				if(distances.get(h_reading) < distances.get(j) ){
-					h_reading = j;
+		for(int i=0;i < avg_distances.size() ; i++){
+			for(int j = i+1; j < avg_distances.size()-1; j++){
+				if(avg_distances.get(index_h) < avg_distances.get(j) ){
+					index_h = j;
 				}
-				if(distances.get(l_reading) > distances.get(j)){
-					l_reading = j;
+				if(avg_distances.get(index_l) > avg_distances.get(j)){
+					index_l = j;
 				}
 			}
 		}
-		int index_h = (int) Math.floor(h_reading/6);
-		int index_l = (int) Math.floor(l_reading/6);
-		calculated_orientation = orientations[index_l];
-		//calculate index for orientation if index_l = 4 (south) 
+		//base orientation in high reading since low can vary too much
+		calculated_orientation = orientations[add(index_h,4,avg_distances.size())]; 
 		//we need to know if index_h points to North
-		if( add(index_h, 4, orientations.length) == index_l || add(index_h, 3, orientations.length) == index_l || add(index_h, 5, orientations.length) == index_l){
+		if( add(index_h,4,avg_distances.size()) == index_l || add(index_h,3,avg_distances.size()) == index_l || add(index_h,5,avg_distances.size()) == index_l){
 			accurate = true;
 		}else{
 			accurate = false;
 		}
 		
 		//calculate average distance with the 4 lowest
-		double average = 0.0;
-		average += distances.get(index_l); //length 60???????
-		average += distances.get(add(index_l,-1, distances.size()));
-		average += distances.get(add(index_l,+1, distances.size()));
-		average += distances.get(add(index_l,+2, distances.size()));
-		average = average/4;
-		avg_distance = average;
-
+//		double average = 0.0;
+//		average += distances.get(index_l);
+//		average += distances.get(add(index_l,-1, distances.size()));
+//		average += distances.get(add(index_l,+1, distances.size()));
+//		average += distances.get(add(index_l,+2, distances.size()));
+//		average = average/4;
+//		avg_distance = average;
+		avg_distance = avg_distances.get(index_l);
 		/* x =  1 -> east
 		 * x = -1 -> west
 		 * y =  1 -> north
@@ -275,12 +276,14 @@ public class BtPositioning extends Activity{
 	}
 
 	public String getCalculatedDistances(){
-		String response = "****\n AVG Distances \n";
-		for(int i = 0; i < avg_distances.size(); i++){
-			response += i+ " - "+ String.format("%.3f",avg_distances.get(i)) + " \n ";
+		String response = "****\n Readings + Distances \n";
+		for(int i = 0; i < readings.size(); i++){
+			response += (i+1)+ "reading "+ String.format("%.3f",readings.get(i)) 
+					+ " distance - "+ String.format("%.3f",distances.get(i)) + " \n";
 		}
-		response += "Average " + String.format("%.3f", avg_distance) + "\n Orientation - \n"+ calculated_orientation;
-		Log.w("ALL", response);
+		response += "Average " + String.format("%.3f", avg_distance)+"\n";
+		response += "Orientation " + getSOrientation();
+		Log.w("results", response);
 		return response;
 	}
 

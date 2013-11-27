@@ -6,13 +6,33 @@
     tools:context=".MainActivity" >
 
     <TextView
-        android:id="@+id/textView1"
+        android:id="@+id/tvEnviron"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:background="#6677ee"
-        android:text="@string/TitleMain"
+        android:background="#3377ee"
+        android:text="@string/TitleEnvironment"
+        android:textColor="#fff"
+        android:textSize="22sp" />
+
+    <Switch
+        android:id="@+id/toggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tvEnviron"
+        android:layout_centerInParent="true"
+        android:onClick="onToggleClicked"
+        android:textOff="@string/txtOff"
+        android:textOn="@string/txtOn" />
+    
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/toggle"
+        android:layout_alignParentLeft="true"
+        android:background="#3377ee"
+        android:text="@string/TitleFriends"
         android:textColor="#fff"
         android:textSize="22sp" />
 
@@ -22,6 +42,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
         android:layout_below="@id/textView1" >
     </ListView>
 

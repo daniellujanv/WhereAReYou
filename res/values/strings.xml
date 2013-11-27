@@ -7,7 +7,10 @@
     <string name="title_activity_ar">ARActivity</string>
     <string name="metaioSDKSignature">gl9GWjd51Ix1xFAhfkvSn2VsxUot3hP6hkWmdbiIE48=</string>
     <string name="Sensors">Sensor</string>
-    <string name="TitleMain">Nearby Friends</string>
+    <string name="TitleFriends">Nearby Friends</string>
+    <string name="TitleEnvironment">Select Environment</string>
+    <string name="txtOff">Indoors</string>
+    <string name="txtOn">Outdoors</string>
     <string name="AllFriendsBtn">Find All!</string>
     <string name="ARImage">AR view</string>
 

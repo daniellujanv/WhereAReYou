@@ -65,6 +65,11 @@ public class ARActivity extends ARViewActivity implements SensorsComponentAndroi
 	private Device device;
 	private long timeNow;
 	private long timeLastReading;
+	private long initialTime;
+	private long endingTime;
+	private boolean indoor;
+	private int readingsPerOrientation = 4;
+
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) 
@@ -72,10 +77,11 @@ public class ARActivity extends ARViewActivity implements SensorsComponentAndroi
 		super.onCreate(savedInstanceState);
 		individualProgress = (ProgressBar) this.mGUIView.findViewById(R.id.individualprogressbar);
 		devices = new ArrayList<String>();
-		btPositioning = new BtPositioning();
+		btPositioning = new BtPositioning(indoor);
 		timeLastReading = System.currentTimeMillis();
 		Intent intent = getIntent();
 		device_to_search = intent.getStringArrayExtra("device");
+		indoor = intent.getBooleanExtra("indoor", true);
 		devices.add(device_to_search[1]);
 		device = new Device(device_to_search[0],device_to_search[1]);
 		setTitle("Looking for "+ device.name);
@@ -84,7 +90,7 @@ public class ARActivity extends ARViewActivity implements SensorsComponentAndroi
 		friends = new ArrayList<IGeometry>();
 		// Set GPS tracking configuration
 		// The GPS tracking configuration must be set on user-interface thread
-		boolean result = metaioSDK.setTrackingConfiguration("GPS");  
+		boolean result = metaioSDK.setTrackingConfiguration("GPS");
 		initializeBluetooth();
 		//		MetaioDebug.log("Tracking data loaded: " + result);  
 		//		Log.w("Tracking data loaded", (result == true)? "true":"false");   
@@ -154,6 +160,7 @@ public class ARActivity extends ARViewActivity implements SensorsComponentAndroi
 			mRadar.setObjectTexture(cross, AssetsManager.getAssetPath("Media/red.png"));
 
 			mRadar.setRelativeToScreen(IGeometry.ANCHOR_BC);
+			initialTime = System.currentTimeMillis();
 			// add geometries to the radar
 			//			mRadar.add(friends.get(0));
 			//				mRadar.add(friends.get(2));
@@ -255,9 +262,9 @@ public class ARActivity extends ARViewActivity implements SensorsComponentAndroi
 			//			friends.get(0).setTranslation(new Vector3d(AWAY_FROM_SCREEN,AWAY_FROM_SCREEN, -7250f),false);
 			friends.get(0).setTranslation(new Vector3d((device.orientation[0])*AWAY_FROM_SCREEN,(device.orientation[1])*AWAY_FROM_SCREEN, -7250f),false);
 			friends.get(0).setRenderOrder(0);
-			String deviceInfo = device.name+" \n "+ device.distance +" meters \n Orientation: "+device.s_orientation;
+			String deviceInfo = device.name+" \n "+ String.format("%.3f", device.distance) +" meters \n Orientation: "+device.s_orientation;
 			if(!device.accurate){
-				deviceInfo += "\n *Orientation not Accurate* ";
+				deviceInfo += "\n *Orientation may not be accurate* ";
 			}
 			//billboard
 			friends.add(metaioSDK.createGeometryFromImage(createBillboardTexture(deviceInfo)));
@@ -279,58 +286,32 @@ public class ARActivity extends ARViewActivity implements SensorsComponentAndroi
 			geometry.setTranslation(new Vector3d(0f,0f,0f));
 			mRadar.remove(geometry);
 			Log.w("onGeometryTouched", "geometry "+ name);
-			int run = btPositioning.readings.size()/6;
+			int run = btPositioning.readings.size()/readingsPerOrientation;
 			Log.w("geometryTouched","run "+run);
-			toast("Searching for device!\n" +
-					"Point to and click the next cross when it appears \n" +
-					(7-run)+" steps to go",true, false);
+			if((7-run) != 0){
+				toast("Searching for device!\n" +
+						"Point to and click the next cross when it appears \n" +
+						(7-run)+" steps to go",true, false);
+			}else{
+				toast("Searching for device!\n" +
+						"After the vibration look for your friend in the radar! \n" ,true, false);
+			}
 			searchManager = new SearchingManager(); 
 			searchManager.execute(null, null, null);
 		}
-		//		MetaioDebug.log("Geometry selected: "+geometry);
-		//		Log.w("geometryTouched",geometry.getName());
-		//		mSurfaceView.queueEvent(new Runnable()
-		//		{
-		//			@Override
-		//			public void run() 
-		//			{
-		//				mRadar.setObjectsDefaultTexture(AssetsManager.getAssetPath("Media/yellow.png"));
-		//				mRadar.setObjectTexture(geometry, AssetsManager.getAssetPath("Media/red.png"));
-		//			}
-		//		});
 	}
 
 	@Override
 	public void onGravitySensorChanged(float[] gravity) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void onHeadingSensorChanged(float[] orientation) {
-		// TODO Auto-generated method stub
-		//		TextView text = (TextView)findViewById(R.id.sensorInfo);
-		//		float orientation_0 = (float) Math.floor(orientation[0]);
-		//		float orientation_1 = (float) Math.floor(orientation[1]);
-		//		float orientation_2 = (float) Math.floor(orientation[2]);
-		//		text.setText("[0x]" + orientation_0  + "[1y]" + orientation_1 + "[2z]" + orientation_2);
-		////		try{
-		////			friends.get(0).setTranslation(new Vector3d(/*orientation[0]-previous_orientation[0]*/ 0 ,orientation_1-previous_orientation[1],orientation_2-previous_orientation[2]), true);
-		////			Log.w("LocationChange","0 - "+friends.get(0).getTranslation().toString());
-		////		}catch(IndexOutOfBoundsException e){}
-		//
-		//		previous_orientation[0] = orientation_0;
-		//		previous_orientation[1] = orientation_1;
-		//		previous_orientation[2] = orientation_2;
-
 	}
 
 	@Override
 	public void onLocationSensorChanged(LLACoordinate location)
 	{
-		//		MetaioDebug.log("Location changed: "+location);
-		//		Log.w("LocationChange", "sensor changed - Location changed: "+location);
-		//		updateGeometriesLocation(location);
 	}
 
 	/**
@@ -421,7 +402,7 @@ public class ARActivity extends ARViewActivity implements SensorsComponentAndroi
 			break;
 		}
 		Log.w("changeUserOrientation","direction "+orientation+" x:"+x+" y:"+y+ " rotation: "+(getRotation(x,y)*-1));
-		cross.setTranslation(new Vector3d((x)*AWAY_FROM_SCREEN,(y)*AWAY_FROM_SCREEN, -15000f),false);
+		cross.setTranslation(new Vector3d((x)*(AWAY_FROM_SCREEN),(y)*(AWAY_FROM_SCREEN), -15000f),false);
 		cross.setRotation(new Rotation( 0f, 0f, getRotation(x,y)*-1),false); //radians, PI == half turn
 
 		mRadar.add(cross);
@@ -461,11 +442,13 @@ public class ARActivity extends ARViewActivity implements SensorsComponentAndroi
 					btPositioning.addReading((double)rssi);
 					//					Log.w("device",device.getName() + " rssi: "+ rssi + " -- dstnc:");
 					undiscoverDevices();
-					if((btPositioning.readings.size() % 6) != 0 && btPositioning.readings.size() != 60 ){ //taking 6 readings on each side
+					//taking # readings on each side, *10 because 6%60 gives 0 and it freezes
+					if((btPositioning.readings.size() % readingsPerOrientation) != 0 && 
+							btPositioning.readings.size() != (readingsPerOrientation*10) ){ 
 						discoverDevices();
 						goRead = true;
 					}else{
-						timeLastReading = System.currentTimeMillis();
+//						timeLastReading = System.currentTimeMillis();
 						goRead = false;
 					}
 
@@ -475,31 +458,30 @@ public class ARActivity extends ARViewActivity implements SensorsComponentAndroi
 	};
 
 	/*
-	 * Manager fo Bluetooth devices search 
+	 * Manager for Bluetooth devices search 
 	 * puts thread to sleep 3 seconds after reading 6 RSSIs
 	 */
 	private class SearchingManager extends AsyncTask<Void, Integer, Integer> {
 
 		protected Integer doInBackground(Void... runNumber) {
 			//			Log.w("searchManager", "searchingManagerStarted");
-			int i = btPositioning.readings.size()/6; //0<= i <= 7
+			int i = btPositioning.readings.size()/readingsPerOrientation; //0<= i <= 7
 			try {
 				goRead = true;
-				Log.w("searchManager", "run "+(i+1));
 				discoverDevices();
 				while(goRead){
-					Thread.sleep(4000); //timer instead of thread sleep
+					Thread.sleep(3500);
 					timeNow = System.currentTimeMillis();
 					Log.w("searchManager", " listSize:"+btPositioning.readings.size()+ " time:"+ (timeNow-timeLastReading));
 //					 
-					if(goRead && (timeNow - timeLastReading)  > 4000){//if goRead is true it means the readings.size() is still less than 6 and possibly frozen 
+					if(goRead && (timeNow - timeLastReading)  > 4500){//if goRead is true it means the readings.size() is still less than 6 and possibly frozen 
 						try{
 							Log.w("searchManager","more than 5 seconds and still need readings");
 							undiscoverDevices();								
 						}catch(Exception e){}
 						discoverDevices();
 					}
-					int individualprogress = (int)((((double)btPositioning.readings.size()%6)/6)*100);
+					int individualprogress = (int)((((double)btPositioning.readings.size()%readingsPerOrientation)/readingsPerOrientation)*100);
 					publishProgress(-1, individualprogress);
 				}
 				publishProgress(1000);
@@ -531,6 +513,7 @@ public class ARActivity extends ARViewActivity implements SensorsComponentAndroi
 					}
 				});
 			}else{
+				endingTime = System.currentTimeMillis();
 				btPositioning.calculateDistances();//calculating distances & applying mean filter for all the readings
 				btPositioning.calculateOrientation();
 				device.setDistance(btPositioning.getCalculatedDistance());
@@ -543,10 +526,9 @@ public class ARActivity extends ARViewActivity implements SensorsComponentAndroi
 						// TODO Auto-generated method stub
 						buzz(3);
 						updateGeometriesLocation();
-						Log.w("onPostExecute", "finished 8 readings");
-						toast(btPositioning.getCalculatedDistances() + "\n "
-								+ btPositioning.getOrientation() +" \n******DONE*******\n",true, false);
-
+						btPositioning.getCalculatedDistances();
+						Log.w("results","time of run(mins): "+(endingTime-initialTime)/60000);//minutes
+						toast("Friend found in "+ ((endingTime-initialTime)/60000 )+" minutes!",true, false);
 					}
 				});
 			}
@@ -582,7 +564,7 @@ public class ARActivity extends ARViewActivity implements SensorsComponentAndroi
 		mBluetoothAdapter.startDiscovery();
 		IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
 		registerReceiver(mReceiver, filter);
-		timeNow = System.currentTimeMillis();
+		timeLastReading = System.currentTimeMillis();
 	}
 
 	/*
